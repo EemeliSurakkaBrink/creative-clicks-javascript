@@ -992,3 +992,149 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('wheel', onWheel, { passive: false });
 })();
 </script>
+
+<!-- ========================================
+     CUSTOM GTM EVENT TRACKING
+     ========================================
+     This script handles custom event tracking for Google Tag Manager (GTM) and Google Analytics 4 (GA4).
+     It captures all button and link clicks on the website and sends custom events to GTM dataLayer
+     based on specific criteria and button attributes.
+     ======================================== -->
+<script>
+(function() {
+  'use strict';
+  
+  // ========================================
+  // HELPER FUNCTIONS
+  // ========================================
+  
+  /**
+   * Pushes a custom event to the GTM dataLayer
+   * @param {string} eventName - The name of the event to track
+   * @param {object} eventData - Additional data to send with the event
+   */
+  function pushToDataLayer(eventName, eventData) {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      'event': eventName,
+      ...eventData
+    });
+    
+    // Debug logging (comment out in production)
+    console.log('GTM Event Pushed:', eventName, eventData);
+  }
+  
+  /**
+   * Gets a clean text label from a button element
+   * @param {HTMLElement} element - The button element
+   * @returns {string} - Cleaned text content
+   */
+  function getButtonLabel(element) {
+    const textContent = element.textContent || element.innerText || '';
+    return textContent.trim().toLowerCase();
+  }
+  
+  /**
+   * Gets the button theme/variant from data attributes
+   * @param {HTMLElement} element - The button element
+   * @returns {string} - Button theme or 'default'
+   */
+  function getButtonTheme(element) {
+    return element.getAttribute('data-theme') || 'default';
+  }
+  
+  // ========================================
+  // EVENT TRACKING LOGIC
+  // ========================================
+  
+  /**
+   * Analyzes a clicked button and determines what event to fire
+   * @param {HTMLElement} clickedElement - The clicked button/link element
+   */
+  function handleButtonClick(clickedElement) {
+    const href = clickedElement.getAttribute('href') || '';
+    const buttonLabel = getButtonLabel(clickedElement);
+    const buttonTheme = getButtonTheme(clickedElement);
+    
+    // ========================================
+    // TRACK: "Get Started" Mobile User Acquisition Button
+    // ========================================
+    // This tracks clicks on the "get started" button that leads to mobile user acquisition inquiry
+    if (href.includes('mailto:mobileperformance@creativeclicks.com') && 
+        href.includes('Mobile%20User%20Acquisition%20inquiry') &&
+        buttonLabel.includes('get started')) {
+      
+      pushToDataLayer('cta_click', {
+        'cta_type': 'get_started',
+        'cta_category': 'mobile_user_acquisition',
+        'cta_label': 'Get Started - Mobile User Acquisition',
+        'cta_theme': buttonTheme,
+        'cta_destination': 'mailto',
+        'cta_email': 'mobileperformance@creativeclicks.com',
+        'page_url': window.location.href,
+        'page_title': document.title
+      });
+      
+      return; // Exit after tracking this specific event
+    }
+    
+    // ========================================
+    // ADD MORE EVENT TRACKING LOGIC HERE
+    // ========================================
+    // Example template for additional button tracking:
+    /*
+    if (buttonLabel.includes('contact us')) {
+      pushToDataLayer('cta_click', {
+        'cta_type': 'contact',
+        'cta_label': buttonLabel,
+        'cta_theme': buttonTheme,
+        'page_url': window.location.href
+      });
+      return;
+    }
+    */
+    
+    // ========================================
+    // GENERIC BUTTON TRACKING (fallback)
+    // ========================================
+    // This catches all other button clicks for general tracking
+    // You can comment this out if you only want to track specific buttons
+    if (buttonLabel) {
+      pushToDataLayer('button_click', {
+        'button_label': buttonLabel,
+        'button_theme': buttonTheme,
+        'button_href': href,
+        'page_url': window.location.href,
+        'page_title': document.title
+      });
+    }
+  }
+  
+  // ========================================
+  // UNIVERSAL CLICK LISTENER
+  // ========================================
+  // This listener captures ALL clicks on the page and filters for buttons/links
+  
+  document.addEventListener('click', function(event) {
+    // Find the closest button or link element (handles clicks on child elements)
+    const clickedElement = event.target.closest('a, button, [role="button"]');
+    
+    // If no button/link was clicked, ignore the event
+    if (!clickedElement) {
+      return;
+    }
+    
+    // Process the button click
+    handleButtonClick(clickedElement);
+    
+  }, true); // Use capture phase to catch events early
+  
+  // ========================================
+  // INITIALIZATION
+  // ========================================
+  // Log that the tracking script has loaded successfully
+  console.log('GTM Custom Event Tracking Initialized');
+  
+})();
+</script>
+<!-- END CUSTOM GTM EVENT TRACKING -->
